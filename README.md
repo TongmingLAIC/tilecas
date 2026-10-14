@@ -6,7 +6,7 @@ TileCas enables coding agents to develop accelerator kernels across editable pro
 
 **Authors:** Xinyu Xiao (Fudan University), Zihe Song (University of Texas at Dallas), Dezhi Ran (Peking University / Beijing Tongming Lake Information Technology Application Innovation Center), Wei Yang (Fudan University), and Tao Xie (Peking University / Fudan University).
 
-**[Project website](https://alex4210987.github.io/tilecas/) · [Paper](https://alex4210987.github.io/tilecas/downloads/TileCas.pdf) · [Results and materials](https://alex4210987.github.io/tilecas/#materials)**
+**[Project website](https://alex4210987.github.io/tilecas/) · [arXiv](https://arxiv.org/abs/2610.14740) · [PDF](https://arxiv.org/pdf/2610.14740) · [Results and materials](https://alex4210987.github.io/tilecas/#materials)**
 
 ## Source layout
 
@@ -56,7 +56,10 @@ See [CITATION.cff](CITATION.cff), or use:
   title = {TileCas: Cascading Kernel Development Across Programming Abstractions},
   author = {Xinyu Xiao and Zihe Song and Dezhi Ran and Wei Yang and Tao Xie},
   year = {2026},
-  url = {https://alex4210987.github.io/tilecas/}
+  eprint = {2610.14740},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.SE},
+  url = {https://arxiv.org/abs/2610.14740}
 }
 ```
 

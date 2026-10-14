@@ -33,3 +33,21 @@ keywords:
   - TileLang
   - Ascend
   - ROCm
+preferred-citation:
+  type: article
+  title: "TileCas: Cascading Kernel Development Across Programming Abstractions"
+  authors:
+    - family-names: Xiao
+      given-names: Xinyu
+    - family-names: Song
+      given-names: Zihe
+    - family-names: Ran
+      given-names: Dezhi
+    - family-names: Yang
+      given-names: Wei
+    - family-names: Xie
+      given-names: Tao
+  journal: "arXiv preprint arXiv:2610.14740"
+  year: 2026
+  doi: "10.48550/arXiv.2610.14740"
+  url: "https://arxiv.org/abs/2610.14740"
