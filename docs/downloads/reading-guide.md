@@ -9,13 +9,13 @@ Figure 4 reports the MinGPT case using its own reference latency of 44.954 ms. F
 
 The selected iter-53 source took 3.831 ms during search, 3.880 ms in an unchanged repeat at iter-58, and 4.138 ms in final verification. The retained note records identical source and configuration and successful correctness checks in all three evaluations. The repeat differs by 1.28%; the approximately 8% best-to-final increase is a candidate remeasurement difference, independent of reference normalization. It is consistent with between-evaluation variability and does not reflect a source change during restoration.
 
-Final verification still gives a 10.864× case speedup. The new [aggregate sensitivity analysis](https://alex4210987.github.io/tilecas/#verification) also preserves the principal overall mean-performance conclusions when every method uses final-verification values. The Figure 4 case is recorded separately: its mapping to a main-cohort run has not been established, so it is not included in that aggregate. Original figures and numerical records are unchanged. [Case alignment ↓](https://alex4210987.github.io/tilecas/downloads/final-verify-case-alignment.csv) · [Figure conventions ↗](https://alex4210987.github.io/tilecas/downloads/figure-data.md)
+Final verification still gives a 10.864× case speedup. The new [aggregate sensitivity analysis](https://tongminglaic.github.io/tilecas/#verification) also preserves the principal overall mean-performance conclusions when every method uses final-verification values. The Figure 4 case is recorded separately: its mapping to a main-cohort run has not been established, so it is not included in that aggregate. Original figures and numerical records are unchanged. [Case alignment ↓](https://tongminglaic.github.io/tilecas/downloads/final-verify-case-alignment.csv) · [Figure conventions ↗](https://tongminglaic.github.io/tilecas/downloads/figure-data.md)
 
 ## What exactly is a reported endpoint?
 
 The main tables use best reported: the fixed matching reference latency divided by the lowest eligible median latency from a correct formal search evaluation. Each median uses five timed calls after three warmups. Compile failures, incorrect candidates, diagnostic-only measurements, and protocol-invalid evaluations are excluded; a run with no eligible correct candidate scores zero.
 
-Final verification re-evaluates the restored selected source and is recorded separately. Its latency does not replace the search endpoint. A best-reported speedup therefore describes the search record and need not equal the speedup measured in a later verification. [Endpoint definition ↗](https://alex4210987.github.io/tilecas/downloads/endpoint-definition.md)
+Final verification re-evaluates the restored selected source and is recorded separately. Its latency does not replace the search endpoint. A best-reported speedup therefore describes the search record and need not equal the speedup measured in a later verification. [Endpoint definition ↗](https://tongminglaic.github.io/tilecas/downloads/endpoint-definition.md)
 
 ## What do “five runs,” correctness, SD, and CI mean?
 
@@ -23,13 +23,13 @@ Five independent agent runs are separate from the five timed forward calls withi
 
 A workload–configuration pair meets majority correctness if at least three of five runs succeed. Endpoint scores are averaged over all five runs, including failed-run zeros; a pair with fewer than three successes can still contribute a positive endpoint mean.
 
-The overall mean equally weights the four configurations. SD is across the five aggregate repeat means (ddof = 1). The 95% confidence intervals use 20,000 paired workload bootstrap draws, retaining each workload’s configurations and repeats together. They describe uncertainty conditional on the supplied endpoint records. [Resampling settings ↗](https://alex4210987.github.io/tilecas/downloads/resampling.json)
+The overall mean equally weights the four configurations. SD is across the five aggregate repeat means (ddof = 1). The 95% confidence intervals use 20,000 paired workload bootstrap draws, retaining each workload’s configurations and repeats together. They describe uncertainty conditional on the supplied endpoint records. [Resampling settings ↗](https://tongminglaic.github.io/tilecas/downloads/resampling.json)
 
 ## Are AMD and Ascend measuring the same latency boundary?
 
 Both use the same platform-specific boundary for reference and candidate. AMD uses a synchronized HIP-event interval around the forward invocation. Ascend uses the msprof device-task envelope, from the first attributed task start to the last attributed task completion.
 
-Both include intervening gaps and count overlap once. Ascend excludes host work outside that device interval. These boundaries differ, so normalized speedups should not be read as a direct comparison of absolute hardware latency or identical host request latency. Per-task duration sums are diagnostic only. [Timing protocol ↗](https://alex4210987.github.io/tilecas/downloads/protocol.md)
+Both include intervening gaps and count overlap once. Ascend excludes host work outside that device interval. These boundaries differ, so normalized speedups should not be read as a direct comparison of absolute hardware latency or identical host request latency. Per-task duration sums are diagnostic only. [Timing protocol ↗](https://tongminglaic.github.io/tilecas/downloads/protocol.md)
 
 ## Does Rollback translate edited native code back to TileLang?
 
@@ -49,7 +49,7 @@ The High-only series in Figures 1 and 5 is the complete High-stage AKO invocatio
 
 Only after High completed did the controller export its selected implementation and start a fresh Low-stage session without the High conversation. The High-only and High-to-Low curves therefore share one completed High run rather than independent High samples. Under the same High-stage configuration and stopping rules, that invocation is operationally equivalent to standalone High-only AKO.
 
-The 1.264× endpoint characterizes this search trajectory, not a limit of TileLang’s expressiveness. With different history and guidance, TileCas’s High iter-17 reaches approximately 8.345× under the common reporting reference. Autonomous stopping establishes completion under a workflow policy, not exhaustion of all useful High-level optimizations. [High-only search and autonomous termination ↓](https://alex4210987.github.io/tilecas/downloads/high-only-note.md)
+The 1.264× endpoint characterizes this search trajectory, not a limit of TileLang’s expressiveness. With different history and guidance, TileCas’s High iter-17 reaches approximately 8.345× under the common reporting reference. Autonomous stopping establishes completion under a workflow policy, not exhaustion of all useful High-level optimizations. [High-only search and autonomous termination ↓](https://tongminglaic.github.io/tilecas/downloads/high-only-note.md)
 
 ## What do Fixed, Random, and the ablations control for?
 
@@ -67,9 +67,9 @@ The matched interventions provide a more controlled comparison: from the same st
 
 ## What is available, and what remains outside the evaluation?
 
-The release includes workflow and backend source, evaluator support, 11,000 endpoint records across 11 methods or variants, final-verification values, timing samples, resampling settings, candidate snapshots, and case traces. KDA’s upstream resources remain external; the package includes local adapters and setup instructions. Its dependency metadata distinguishes the supplied reproduction configuration from historical experiment provenance. [KDA integration details ↗](https://alex4210987.github.io/tilecas/downloads/kda-reference.md)
+The release includes workflow and backend source, evaluator support, 11,000 endpoint records across 11 methods or variants, final-verification values, timing samples, resampling settings, candidate snapshots, and case traces. KDA’s upstream resources remain external; the package includes local adapters and setup instructions. Its dependency metadata distinguishes the supplied reproduction configuration from historical experiment provenance. [KDA integration details ↗](https://tongminglaic.github.io/tilecas/downloads/kda-reference.md)
 
-The named MLP and MinGPT cases include candidate and output archives. The 500-episode Rollback table supplies event ordering, but lacks original run IDs and per-episode candidate-source or raw-log paths. Likewise, main-cohort publication run IDs are not mapped to historical run directories. These materials support different levels of inspection; the event table alone is not a complete source archive for all 500 episodes. [Coverage of retained records ↗](https://alex4210987.github.io/tilecas/downloads/material-index.md)
+The named MLP and MinGPT cases include candidate and output archives. The 500-episode Rollback table supplies event ordering, but lacks original run IDs and per-episode candidate-source or raw-log paths. Likewise, main-cohort publication run IDs are not mapped to historical run directories. These materials support different levels of inspection; the event table alone is not a complete source archive for all 500 episodes. [Coverage of retained records ↗](https://tongminglaic.github.io/tilecas/downloads/material-index.md)
 
 The evidence covers two editable levels, 50 KernelBench Level 3 workloads, two accelerator platforms, and two models. Generalization to additional levels, dynamic shapes, communication-heavy workloads, multi-device execution, or future compiler versions remains to be evaluated.
 

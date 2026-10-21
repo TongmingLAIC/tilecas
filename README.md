@@ -6,7 +6,7 @@ TileCas enables coding agents to develop accelerator kernels across editable pro
 
 **Authors:** Xinyu Xiao (Fudan University), Zihe Song (University of Texas at Dallas), Dezhi Ran (Peking University / Beijing Tongming Lake Information Technology Application Innovation Center), Wei Yang (Fudan University), and Tao Xie (Peking University / Fudan University).
 
-**[Project website](https://alex4210987.github.io/tilecas/) · [arXiv](https://arxiv.org/abs/2610.14740) · [PDF](https://arxiv.org/pdf/2610.14740) · [Results and materials](https://alex4210987.github.io/tilecas/#materials)**
+**[Project website](https://tongminglaic.github.io/tilecas/) · [arXiv](https://arxiv.org/abs/2610.14740) · [PDF](https://arxiv.org/pdf/2610.14740) · [Results and materials](https://tongminglaic.github.io/tilecas/#materials)**
 
 ## Source layout
 
@@ -26,7 +26,7 @@ TileCas enables coding agents to develop accelerator kernels across editable pro
 ## Getting started
 
 ```sh
-git clone https://github.com/Alex4210987/tilecas.git
+git clone https://github.com/TongmingLAIC/tilecas.git
 cd tilecas
 python3 scripts/run_experiment.py --help
 python3 scripts/submit_kda_pair.py --help

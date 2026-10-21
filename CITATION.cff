@@ -23,8 +23,8 @@ authors:
     given-names: Tao
     affiliation: Peking University / Fudan University
     email: taoxie@pku.edu.cn
-repository-code: "https://github.com/Alex4210987/tilecas"
-url: "https://alex4210987.github.io/tilecas/"
+repository-code: "https://github.com/TongmingLAIC/tilecas"
+url: "https://tongminglaic.github.io/tilecas/"
 license: MIT
 keywords:
   - accelerator kernels
