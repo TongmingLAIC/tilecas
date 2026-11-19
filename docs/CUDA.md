@@ -41,6 +41,14 @@ Each label retains source, parent, correctness, latency, and available compiler 
 
 Automatic lowering covers static contiguous tensors, scalar parameters, and standard launches with one device entry per JIT call. Multiple sequential calls are captured. The native launch graph preserves argument order and uses the current PyTorch CUDA stream. The Hopper editor supports validated adjacent ALU swaps and increasing an ALU instruction's stall field. The disassembled instruction and cubin encoding are checked against each other before and after every patch.
 
+## Cross-layer diagnosis
+
+Run `python scripts/diagnose.py` from the experiment workspace. It profiles the
+fastest correct candidate and, when needed, the fastest measured candidate with
+CUDA, PTX or SASS artifacts. It reports device time by launch position, so
+different kernels with the same compiled symbol get separate timings and source
+paths. The benchmark's CUDA Event measurements remain the candidate ranking.
+
 ## Source correspondence
 
 Use the exact cubin from the measured node to trace CUDA and PTX lines to machine

@@ -1,4 +1,4 @@
-"""Report the retained candidates and profile the best measured launch graph."""
+"""Report the retained candidates and profile their measured launch graphs."""
 
 from collections import defaultdict
 import json
@@ -29,33 +29,65 @@ def profile(root, row, node, settings):
 
     try:
         torch.manual_seed(42)
+        repeats = 5
         with torch.inference_mode():
             inputs = reference.get_inputs()
-            for _ in range(5):
+            for _ in range(repeats):
                 candidate(*inputs)
             torch.cuda.synchronize()
             with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]) as trace:
-                for _ in range(5):
+                for _ in range(repeats):
                     candidate(*inputs)
-                torch.cuda.synchronize()
-        durations = defaultdict(float)
-        for event in trace.events():
-            if event.device_type == torch.autograd.DeviceType.CUDA:
-                durations[event.name] += event.time_range.elapsed_us() / 5
-        if not durations:
+                    torch.cuda.synchronize()
+        activities = sorted(
+            (event for event in trace.events()
+             if event.device_type == torch.autograd.DeviceType.CUDA),
+            key=lambda event: event.time_range.start,
+        )
+        if not activities:
             print("The CUDA profiler reported no device activities.")
             return
         print(f"CUDA activities for {row['label']} (mean microseconds per candidate call)")
-        for name, elapsed in sorted(durations.items(), key=lambda item: -item[1]):
-            print(f"  {elapsed:.3f} us | {name}")
-        for index, spec in enumerate(program["kernels"] if program else []):
+        launches = launch_timings(activities, repeats, program)
+        if launches is None:
+            durations = defaultdict(float)
+            for event in activities:
+                durations[event.name] += event.time_range.elapsed_us() / repeats
+            print("The activity sequence could not be matched to individual launches.")
+            for name, elapsed in sorted(durations.items(), key=lambda item: -item[1]):
+                print(f"  {elapsed:.3f} us | {name}")
+            return
+        for elapsed, index, name in sorted(launches, key=lambda launch: -launch[0]):
+            if program is None:
+                print(f"  {elapsed:.3f} us | launch {index} | {name}")
+                continue
+            spec = program["kernels"][index]
             callsite = spec.get("tilelang_callsite")
             origin = f" | TileLang {callsite['file']}:{callsite['line']}" if callsite else ""
-            print(f"  kernel_{index}: {spec['entry']} | grid {spec['grid']} | block {spec['block']}"
-                  f" | {spec['shared_bytes']} dynamic shared bytes{origin}")
+            print(f"  {elapsed:.3f} us | kernel_{index}: {name} | grid {spec['grid']}"
+                  f" | block {spec['block']} | {spec['shared_bytes']} dynamic shared bytes{origin}")
+            sass = artifacts / f"kernel_{index}.sass"
+            print(f"    SASS {sass.relative_to(root)}")
     finally:
         if runtime is not None:
             runtime.close()
+
+
+def launch_timings(activities, repeats, program):
+    count, remainder = divmod(len(activities), repeats)
+    if remainder or not count:
+        return None
+    if program is None:
+        names = [event.name for event in activities[:count]]
+    else:
+        names = [spec["entry"] for spec in program["kernels"]]
+    if [event.name for event in activities] != names * repeats:
+        return None
+    return [
+        (sum(event.time_range.elapsed_us() for event in activities[index::count]) / repeats,
+         index, name)
+        for index, name in enumerate(names)
+    ]
 
 
 def main():
@@ -79,11 +111,19 @@ def main():
     if any(row["layer"] != "tilelang" for row, _ in records):
         print("Source lookup: python scripts/source_map.py LABEL --sass-offset OFFSET "
               "(or --cuda-line LINE / --ptx-line LINE)")
-    if records:
+    if not records:
+        return
+    selected = records[:1]
+    if records[0][0]["layer"] == "tilelang":
+        machine = next((record for record in records if record[0]["layer"] != "tilelang"), None)
+        if machine is not None:
+            selected.append(machine)
+    settings = json.loads((root / "settings.json").read_text())
+    for row, node in selected:
         try:
-            profile(root, *records[0], json.loads((root / "settings.json").read_text()))
+            profile(root, row, node, settings)
         except (RuntimeError, OSError) as error:
-            print(f"CUDA profiling unavailable: {error}", file=sys.stderr)
+            print(f"CUDA profiling unavailable for {row['label']}: {error}", file=sys.stderr)
 
 
 if __name__ == "__main__":
