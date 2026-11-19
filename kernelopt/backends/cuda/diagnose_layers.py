@@ -76,6 +76,9 @@ def main():
         if row["layer"] == "cuda":
             for path in sorted((node / "source").glob("*.cu")):
                 print(f"  CUDA source: {path.relative_to(root)}")
+    if any(row["layer"] != "tilelang" for row, _ in records):
+        print("Source lookup: python scripts/source_map.py LABEL --sass-offset OFFSET "
+              "(or --cuda-line LINE / --ptx-line LINE)")
     if records:
         try:
             profile(root, *records[0], json.loads((root / "settings.json").read_text()))

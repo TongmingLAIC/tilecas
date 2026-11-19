@@ -36,7 +36,7 @@ def stage(args, workspace):
         for original, installed in (
             ("bench_layers.py", "bench.py"), ("lower_layers.py", "lower_layers.py"),
             ("diagnose_layers.py", "diagnose.py"), ("layer_runtime.py", "layer_runtime.py"),
-            ("sass_edit.py", "sass_edit.py"),
+            ("sass_edit.py", "sass_edit.py"), ("source_map.py", "source_map.py"),
         ):
             shutil.copyfile(BACKEND / original, scripts / installed)
         for name in ("module_loader.py", "validate_candidate.py"):
@@ -77,6 +77,8 @@ def stage(args, workspace):
             "The evaluator checks supported opcodes, encoding and dependencies.\n"
             "- When unsure about the next change, run `python scripts/diagnose.py`. "
             "Use the recorded parent, timing, CUDA source and machine code to choose a layer. "
+            "For CUDA/PTX/SASS correspondence, use "
+            "`python scripts/source_map.py LABEL --sass-offset OFFSET` or query a CUDA/PTX source line. "
             "Level changes and performance targets are optional.\n"
             "- Keep the input/output contract and use the same reference and evaluation for "
             "all candidates. Record each hypothesis and result in ITERATIONS.md, then "

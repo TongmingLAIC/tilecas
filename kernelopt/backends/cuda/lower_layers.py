@@ -165,6 +165,13 @@ def lower(parent, destination, target=None):
             export_tilelang(current, reference, outgoing)
         else:
             shutil.copyfile(current / "program.json", outgoing / "program.json")
+            if LAYERS[index] == "cuda":
+                archived = outgoing / "cuda-source"
+                archived.mkdir()
+                for path in current.glob("kernel_*.cu"):
+                    shutil.copyfile(path, archived / path.name)
+            elif (current / "cuda-source").is_dir():
+                shutil.copytree(current / "cuda-source", outgoing / "cuda-source")
             for path in artifacts.glob("*.ptx"):
                 shutil.copyfile(path, outgoing / path.name)
                 if LAYERS[index] == "ptx":

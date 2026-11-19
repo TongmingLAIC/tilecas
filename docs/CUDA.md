@@ -40,3 +40,21 @@ python scripts/diagnose.py
 Each label retains source, parent, correctness, latency, and available compiler artifacts in `trajectory/`. Use `--to` with the lowering command to skip layers. To revisit a node, copy its source to a new candidate directory and set `parent.txt` to the original label.
 
 Automatic lowering covers static contiguous tensors, scalar parameters, and standard launches with one device entry per JIT call. Multiple sequential calls are captured. The native launch graph preserves argument order and uses the current PyTorch CUDA stream. The Hopper editor supports validated adjacent ALU swaps and increasing an ALU instruction's stall field. The disassembled instruction and cubin encoding are checked against each other before and after every patch.
+
+## Source correspondence
+
+Use the exact cubin from the measured node to trace CUDA and PTX lines to machine
+instruction offsets, or look up where a machine instruction came from.
+
+```sh
+python scripts/source_map.py native-baseline --kernel 0 --cuda-line 32
+python scripts/source_map.py ptx-baseline --kernel 0 --ptx-line 57
+python scripts/source_map.py sass-iter-1 --kernel 0 --sass-offset 0x80
+```
+
+CUDA and PTX locations come from the compiler's line tables. Lowered nodes
+retain a copy of their CUDA source, including when lowering skips a layer. SASS swaps carry
+their original locations with the edited instructions. A TileLang location
+identifies the Python call that launched the corresponding kernel. Inlining,
+instruction fusion and scheduling can associate several machine instructions
+with the same source line, and some instructions have no reported location.
