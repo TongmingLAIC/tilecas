@@ -2,7 +2,7 @@
 
 **TileCas: Cascading Kernel Development Across Programming Abstractions**
 
-TileCas enables coding agents to develop accelerator kernels across editable programming abstractions. It connects high-level TileLang search with native Ascend C or HIP C++ refinement, using cross-level diagnosis, abstraction scheduling, and a heterogeneous search tree to retain and revisit candidate implementations.
+TileCas enables coding agents to develop accelerator kernels across editable programming abstractions. It connects high-level TileLang search with native Ascend C or HIP C++ refinement and a four-layer CUDA backend, using cross-level diagnosis, abstraction scheduling, and a heterogeneous search tree to retain and revisit candidate implementations.
 
 **Authors:** Xinyu Xiao (Fudan University), Zihe Song (University of Texas at Dallas), Dezhi Ran (Peking University / Beijing Tongming Lake Information Technology Application Innovation Center), Wei Yang (Fudan University), and Tao Xie (Peking University / Fudan University).
 
@@ -15,7 +15,7 @@ TileCas enables coding agents to develop accelerator kernels across editable pro
 | `kernelopt/protocol/` | Shared optimization, diagnosis, export, evaluation, and candidate management |
 | `kernelopt/backends/ascend/` | Ascend C / TileLang-Ascend adapters and evaluation tools |
 | `kernelopt/backends/rocm/` | HIP / TileLang adapters and evaluation tools |
-| `kernelopt/backends/cuda/` | Supporting CUDA export/profiling utilities; not a complete paper-platform launcher |
+| `kernelopt/backends/cuda/` | CUDA export, PTX and Hopper SASS editing, profiling, and candidate replay |
 | `kernelopt/agents/` | Coding-agent CLI integration |
 | `skills/tilecas/` | TileCas agent policy and iteration template |
 | `scripts/` | Run staging, KDA integration, and foreground budget supervisor |
@@ -29,12 +29,13 @@ TileCas enables coding agents to develop accelerator kernels across editable pro
 git clone https://github.com/TongmingLAIC/tilecas.git
 cd tilecas
 python3 scripts/run_experiment.py --help
+python3 scripts/run_cuda_tilecas.py --help
 python3 scripts/submit_kda_pair.py --help
 ```
 
 The help commands require Python 3.10+ on Linux or macOS and do not launch experiments. Accelerator execution requires a Linux host with the appropriate SDK, PyTorch build, TileLang backend, and an authenticated coding-agent CLI. The framework uses source-tree entry points; it is not a standalone PyPI package.
 
-Read [installation and platform setup](docs/INSTALLATION.md), then [reproduction and entry points](docs/REPRODUCTION.md). [KDA_REFERENCE.md](KDA_REFERENCE.md) documents the external KDA dependency and its dedicated launcher. Hardware SDKs, model services, and credentials are configured by the user.
+Read [installation and platform setup](docs/INSTALLATION.md), then [reproduction and entry points](docs/REPRODUCTION.md). The [CUDA guide](docs/CUDA.md) covers the four-layer launcher and evaluator. [KDA_REFERENCE.md](KDA_REFERENCE.md) documents the external KDA dependency and its dedicated launcher. Hardware SDKs, model services, and credentials are configured by the user.
 
 ## How TileCas works
 
