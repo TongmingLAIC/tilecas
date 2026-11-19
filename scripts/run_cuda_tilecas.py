@@ -25,9 +25,15 @@ def stage(args, workspace):
         scripts.mkdir(parents=True)
         (run / "trajectory").mkdir()
         (run / ".harness").mkdir()
-        (candidates / "initial").mkdir(parents=True)
+        initial = candidates / "initial"
         shutil.copyfile(args.reference, run / "reference.py")
-        shutil.copyfile(args.tilelang, candidates / "initial/ModelNew.py")
+        if args.initial_sass:
+            locked = run / ".harness/sass-base"
+            shutil.copytree(args.initial_sass, locked, ignore=shutil.ignore_patterns("parent.txt", "__pycache__"))
+            shutil.copytree(locked, initial)
+        else:
+            initial.mkdir(parents=True)
+            shutil.copyfile(args.tilelang, initial / "ModelNew.py")
         for asset in args.asset:
             if (run / asset.name).exists():
                 raise ValueError(f"Asset name conflicts with a run file: {asset.name}")
@@ -55,23 +61,30 @@ def stage(args, workspace):
             "rtol": args.rtol, "timing": "cuda_events", "layers": args.layers,
         }, indent=2) + "\n")
         (run / "ITERATIONS.md").write_text("# Iterations\n\n")
+        lowering = (
+            "- Run `python scripts/lower_layers.py MEASURED_LABEL CHILD` to materialize "
+            "the next editable layer from a correct measured node. Add --to LAYER to skip intervening layers. "
+            "TileLang lowers to CUDA C++, CUDA to PTX, and PTX to Hopper SASS edits.\n"
+        ) if args.mode == "ours" else (
+            "- Change only kernel_N.sass.json edit plans. Keep the supplied cubins, input ABI, "
+            "launch settings and PTX fixed. Inspect disassembly and profile the executable candidate. "
+            "Apply the same evidence and stopping rules within SASS.\n"
+        )
         (run / "AGENTS.md").write_text(
-            "# CUDA TileCas\n\n"
+            f"# CUDA {'TileCas' if args.mode == 'ours' else 'SASS-only'}\n\n"
             "Use one optimizer conversation and read TILECAS.md. Apply its search, evidence and "
             "stopping rules using the CUDA workspace layout and commands below.\n\n"
             f"- Editable layers in this run: {", ".join(args.layers)}.\n"
-            "- Start by measuring the supplied TileLang implementation with "
-            "`bash scripts/bench.sh tilelang initial baseline`.\n"
+            f"- Start by measuring the supplied implementation with "
+            f"`bash scripts/bench.sh {args.initial_layer} initial baseline`.\n"
             "- Edit candidates under `candidates/`. Evaluate using "
             "`bash scripts/bench.sh LAYER CANDIDATE LABEL`. Each label is unique. "
             "The evaluation snapshots the source and measures all launches.\n"
-            "- Run `python scripts/lower_layers.py MEASURED_LABEL CHILD` to materialize "
-            "the next editable layer from a correct measured node. Add --to LAYER to skip intervening layers. "
-            "TileLang lowers to CUDA C++, CUDA to PTX, and PTX to Hopper SASS edits. "
-            "Branch or return to any retained candidate by copying its recorded source "
+            f"{lowering}"
+            "- Branch or return to any retained candidate by copying its recorded source "
             "into a new candidate directory and setting its parent.txt to that label.\n"
-            "- Edit CUDA device source and the corresponding launch ABI in program.json. "
-            "Edit PTX directly. For SASS, consult kernel_N.sass and edit kernel_N.sass.json. "
+            "- In editable CUDA or PTX layers, edit device source, PTX, or the launch ABI in program.json. "
+            "For SASS, consult kernel_N.sass and edit kernel_N.sass.json. "
             'Examples are `[{"op":"swap","offset":"0x100"}]` for adjacent instructions, '
             'and `[{"op":"stall","offset":"0x100","cycles":10}]` to increase a stall. '
             "The evaluator checks supported opcodes, encoding and dependencies.\n"
@@ -102,15 +115,18 @@ def launch(args, workspace, env):
     run_remote.AKO_SKILL = REPO / "skills/tilecas/SKILL.md"
     agent_driver.EFFORT = args.effort
     cmd = agent_driver.build(
-        args.model, "Read AGENTS.md and carry out this CUDA TileCas optimization.", workspace,
+        args.model, f"Read AGENTS.md and optimize this CUDA kernel in {args.mode} mode.", workspace,
         single_agent=True, json_output=True,
     )
+    readonly = ["reference.py", "settings.json", "scripts", "AGENTS.md", "TILECAS.md",
+                *(asset.name for asset in args.asset)]
+    if args.initial_sass:
+        readonly.append(".harness/sass-base")
     cmd = run_remote.isolated_agent_command(
         workspace, cmd, workspace_view=workspace, private_history=True,
-        readonly_workspace_paths=("reference.py", "settings.json", "scripts", "AGENTS.md", "TILECAS.md",
-                                  *(asset.name for asset in args.asset)),
+        readonly_workspace_paths=tuple(readonly),
     )
-    state = {"run_id": workspace.name, "task": args.reference.stem, "mode": "ours",
+    state = {"run_id": workspace.name, "task": args.reference.stem, "mode": args.mode,
              "status": "running", "device": f"cuda:{args.gpu}", "agent_model": args.model,
              "reasoning_effort": args.effort, "started_at_epoch": time.time()}
     path = workspace / "state.json"
@@ -132,19 +148,28 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("workspace", type=Path, help="New run path, under the runs directory")
     parser.add_argument("--reference", type=Path, required=True)
-    parser.add_argument("--tilelang", type=Path, required=True, help="Initial ModelNew.py")
+    initial = parser.add_mutually_exclusive_group(required=True)
+    initial.add_argument("--tilelang", type=Path, help="Initial ModelNew.py")
+    initial.add_argument("--initial-sass", type=Path, help="A candidate lowered to Hopper SASS")
     parser.add_argument("--asset", type=Path, action="append", default=[])
     parser.add_argument("--gpu", type=int, required=True)
     parser.add_argument("--model", default="gpt-6.2-sol")
     parser.add_argument("--effort", default="low")
     parser.add_argument("--atol", type=float, default=0.01)
     parser.add_argument("--rtol", type=float, default=0.01)
-    parser.add_argument("--layers", nargs="+", choices=("tilelang", "cuda", "ptx", "sass"),
-                        default=("tilelang", "cuda", "ptx", "sass"))
+    parser.add_argument("--layers", nargs="+", choices=("tilelang", "cuda", "ptx", "sass"))
     parser.add_argument("--stage-only", action="store_true")
     args = parser.parse_args()
     workspace = args.workspace.resolve()
-    if "tilelang" not in args.layers or len(set(args.layers)) != len(args.layers):
+    args.mode = "sass-only" if args.initial_sass else "ours"
+    args.initial_layer = "sass" if args.initial_sass else "tilelang"
+    args.layers = args.layers or (["sass"] if args.initial_sass else ["tilelang", "cuda", "ptx", "sass"])
+    if args.initial_sass:
+        if args.layers != ["sass"]:
+            parser.error("--initial-sass requires SASS-only editing")
+        if not (args.initial_sass / "program.json").is_file():
+            parser.error("--initial-sass requires a lowered candidate directory with a program.json")
+    elif "tilelang" not in args.layers or len(set(args.layers)) != len(args.layers):
         parser.error("Include tilelang and list each layer once.")
     if workspace.exists():
         parser.error(f"Run already exists: {workspace}")

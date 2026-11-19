@@ -53,6 +53,12 @@ def evaluate(layer, root, artifacts, settings):
             raise ValueError("\n".join(errors))
         candidate = make_model(root / "ModelNew.py", reference)
     else:
+        if settings["layers"] == ["sass"]:
+            locked = RUN / ".harness/sass-base"
+            for name in ("program.json", *(path.name for path in locked.glob("*.ptx")),
+                         *(path.name for path in locked.glob("*.cubin"))):
+                if (root / name).read_bytes() != (locked / name).read_bytes():
+                    raise ValueError(f"SASS-only runs require the original PTX, cubin and launch ABI: {name}")
         if layer == "cuda":
             from validate_candidate import cuda_template_errors
             for path in root.glob("*.cu"):

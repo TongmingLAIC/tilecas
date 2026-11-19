@@ -16,6 +16,11 @@ python scripts/run_cuda_tilecas.py "$HOME/workspace/runs/cuda-example" \
 
 The reference supplies `Model`, `get_inputs()`, and `get_init_inputs()`. Generate random floating inputs with `torch.randn`. To include a small file that the reference loads next to itself, pass `--asset /path/to/file`. For a manual run, add `--stage-only` and follow `AGENTS.md` in the new workspace. For a three-layer comparison, add `--layers tilelang cuda ptx`. Use the same inputs, GPU and timing settings for each comparison.
 
+For a SASS-only run, lower a measured PTX candidate with
+`python scripts/lower_layers.py PTX_LABEL MACHINE_CANDIDATE --to sass`. Start a new
+run with `--initial-sass /path/to/candidates/MACHINE_CANDIDATE` in place of
+`--tilelang`. This opens only SASS edit plans under the same evaluator.
+
 ## Edit and evaluate
 
 | Layer | Editable files | Build and launch |
